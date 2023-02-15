@@ -21,16 +21,13 @@ export const getTargetId = async (transport: Transport): Promise<number> => {
 };
 
 export const getAppsList = async (): Promise<Application[]> => {
-  console.log("222");
   const { data } = await axios<Application[]>({
     method: 'GET',
     url: 'https://manager.api.live.ledger.com/api/applications',
   });
-  console.log(data)
   if (!data || !Array.isArray(data)) {
     throw new Error('Manager api down');
   }
-
   return data;
 };
 
@@ -38,21 +35,16 @@ const getDeviceVersion = async (
   targetId: string | number,
   provider: number,
 ): Promise<DeviceVersion> => {
-  const url = new URL(
-    `https://manager.api.live.ledger.com/api/get_device_version`,
-  );
-
-  console.log(targetId, provider)
-  
-  const { data }: { data: DeviceVersion } = await axios.post("https://manager.api.live.ledger.com/api/get_device_version", {
-    provider,
-    target_id: targetId,
-  },
+  const { data }: { data: DeviceVersion } = await axios("https://manager.api.live.ledger.com/api/get_device_version",
   {
     method: "POST",
     headers: {
       'Content-type': 'application/x-www-form-urlencoded',
-    }
+    },
+    data: JSON.stringify({
+      target_id: targetId,
+      provider,
+    })
   }).catch((error) => {
       const status =
         error && (error.status || (error.response && error.response.status)); // FIXME LLD is doing error remapping already. we probably need to move the remapping in live-common
@@ -77,18 +69,21 @@ const getCurrentFirmware = async (
   provider: number,
 ): Promise<FinalFirmware> => {
   const url = new URL(
-    `https://manager.api.live.ledger.com/api/get_device_version`,
+    `https://manager.api.live.ledger.com/api/get_firmware_version`,
   );
-
   const { data }: {
     data: FinalFirmware;
-  } = await axios.post(url.toString(), {
-    device_version: deviceId,
-    version_name: version,
-    provider: provider,
+  } = await axios(url.toString(), {
+    method: "POST",
+    headers: {
+      'Content-type': 'application/x-www-form-urlencoded',
+    },
+    data: JSON.stringify({
+      device_version: deviceId,
+      version_name: version,
+      provider: 1,
+    })
   });
-  console.log("data");
-  console.log(data);
   return data;
 };
 
@@ -120,16 +115,19 @@ const applicationsByDevice = async (
   current_se_firmware_final_version: Id,
   provider: number,
 ): Promise<ApplicationVersion[]> => {
-  const url = new URL(`wss://scriptrunner.api.live.ledger.com/update/get_apps`);
-
-  const {
-    data,
-  }: {
+  const url = new URL(`https://manager.api.live.ledger.com/api/get_apps`);
+  const { data } : {
     data: { application_versions: ApplicationVersion[] };
-  } = await axios.post(url.toString(), {
-    device_version: device_version,
-    current_se_firmware_final_version: current_se_firmware_final_version,
-    provider: provider,
+  } = await axios(url.toString(), {
+    method: "POST",
+    headers: {
+      'Content-type': 'application/x-www-form-urlencoded',
+    },
+    data: JSON.stringify({
+      device_version: device_version,
+      current_se_firmware_final_version: current_se_firmware_final_version,
+      provider: 1,
+    })
   });
   return data.application_versions;
 };
@@ -139,37 +137,34 @@ export const getAppsListByDevice = async (
   isDevMode = false, // TODO getFullListSortedCryptoCurrencies can be a local function.. too much dep for now
   provider: number,
 ): Promise<ApplicationVersion[]> => {
-  console.log("1");
   if (deviceInfo.isOSU || deviceInfo.isBootloader) return Promise.resolve([]);
   const deviceVersionP = getDeviceVersion(deviceInfo.targetId, provider);
   const firmwareDataP = await deviceVersionP.then((deviceVersion) =>
-    getCurrentFirmware(String(deviceVersion.id), deviceInfo.version, provider),
+    getCurrentFirmware(String(deviceInfo.version), deviceVersion.id, provider),
   );
-  console.log("11");
-  console.log(firmwareDataP);
-  const applicationsByDeviceP = Promise.all([
+  console.log("firmwareDataP", firmwareDataP);
+  const applicationsByDeviceP = await Promise.all([
     deviceVersionP,
     firmwareDataP,
   ]).then(([deviceVersion, firmwareData]) =>
-    applicationsByDevice(firmwareData.id, deviceVersion.id, provider),
+    applicationsByDevice(deviceVersion.id, firmwareData.id, provider),
   );
-  console.log("111");
+  console.log("applicationsByDeviceP", applicationsByDeviceP)
   const [applicationsList, compatibleAppVersionsList] = await Promise.all([
     getAppsList(),
     applicationsByDeviceP,
   ]);
+  console.log("applicationsList, compatibleAppVersionsList")
+  console.log(applicationsList, compatibleAppVersionsList)
   const filtered = isDevMode
     ? compatibleAppVersionsList.slice(0)
     : compatibleAppVersionsList.filter((version) => {
         const app = applicationsList.find((e) => e.id === version.app);
-      console.log(app);
       if (app) {
         return app.category !== 2;
       }
 
       return false;
     });
-  console.log("filtered")
-  console.log(filtered)
   return filtered;
 };
