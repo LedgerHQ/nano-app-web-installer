@@ -51,11 +51,7 @@ const getDeviceVersion = async (
   {
     method: "POST",
     headers: {
-      'Access-Control-Allow-Origin': '*',
       'Content-type': 'application/x-www-form-urlencoded',
-      'Access-Control-Allow-Methods': "POST,OPTIONS",
-      'Access-Control-Allow-Headers': 'Origin, Content-Type, X-Auth-Token',
-      "Access-Control-Max-Age": 86400
     }
   }).catch((error) => {
       const status =
