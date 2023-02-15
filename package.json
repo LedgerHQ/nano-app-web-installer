@@ -7,6 +7,7 @@
     "@ledgerhq/hw-transport-web-ble": "^6.27.10",
     "@ledgerhq/hw-transport-webhid": "^6.27.10",
     "@ledgerhq/hw-transport-webusb": "^6.27.10",
+    "@ledgerhq/types-live": "^6.30.0",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",

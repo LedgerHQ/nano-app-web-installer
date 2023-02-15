@@ -11,6 +11,33 @@ export const getTargetId = async (transport) => {
   return targetId;
 };
 
+export const getAppAndVersion = async(transport) => {
+  const res = await transport.send(0xb0, 0x01, 0x00, 0x00);
+  let i = 0;
+  const format = res[i++];
+
+  if (format !== 1) {
+    throw "getAppAndVersion: format not supported";
+  }
+
+  const nameLength = res[i++];
+  const name = res.slice(i, (i += nameLength)).toString("ascii");
+  const versionLength = res[i++];
+  const version = res.slice(i, (i += versionLength)).toString("ascii");
+  const flagLength = res[i++];
+  const flags = res.slice(i, (i += flagLength));
+  console.log({
+    name,
+    version,
+    flags,
+  });
+  return {
+    name,
+    version,
+    flags,
+  };
+}
+
 export const installApp = async (targetId, app, transport, isDelete) => {
   const url = new URL(`wss://scriptrunner.api.live.ledger.com/update/install`);
 
