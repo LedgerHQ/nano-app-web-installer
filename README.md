@@ -1,8 +1,6 @@
-# Getting Started with Create React App
+# Exemple repository on how to use nano-web-app-installer
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
-
-## Available Scripts
+## Avalable Scripts
 
 In the project directory, you can run:
 
