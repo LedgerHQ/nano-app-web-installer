@@ -9,31 +9,27 @@ function App() {
   const onClickInstall = async (appName, isDelete) => {
     try {
       transport = await TransportWebUSB.create();
-      const device = transport.deviceModel.id.toLowerCase();
       const apps = await appsList();
 
       const family = apps.find(
         (a) =>
           a.name.toLowerCase() === appName.toLowerCase() && a.category !== 2
       );
-
-      console.log("transport");
-      console.log(transport);
-      const lol = await getAppsList();
       const deviceInfo = await getDeviceInfo(transport);
-      console.log(deviceInfo);
       // const version = deviceInfo.version;
-      const appByDevice = await getAppsListByDevice(deviceInfo, false);
-      console.log(appByDevice);
+      const appByDevice = await getAppsListByDevice(deviceInfo, false, 1);
+
+      const myApp = appByDevice.filter( app => app.name == appName);
+      console.log(myApp);
 
       // TODO get device version
       const app = family.application_versions.find(
-        (a) => a.firmware === `${device}/2.0.2-2/ATOM/app_2.34.9`
+        (a) => a.firmware === myApp[0].firmware
       );
 
       // const targetId = await getTargetId(transport);
 
-      // await installApp(app, transport, isDelete);
+      await installApp(app, transport, isDelete);
     } catch (e) {
       setError(String(e));
     }
