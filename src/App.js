@@ -1,35 +1,48 @@
 import "./App.css";
 import TransportWebUSB from "@ledgerhq/hw-transport-webusb";
-import { appsList } from "./api";
 import { useState } from "react";
-import { getDeviceInfo, getTargetId, installApp, getAppsListByDevice, getAppsList } from './lib';
+import { getDeviceInfo, installApp, getAppsListByDevice, openApp, quitCurrentApp, getCurrentAppAndVersion } from './lib';
 function App() {
   let transport;
   const [error, setError] = useState("");
   const onClickInstall = async (appName, isDelete) => {
     try {
       transport = await TransportWebUSB.create();
-      const apps = await appsList();
-
-      const family = apps.find(
-        (a) =>
-          a.name.toLowerCase() === appName.toLowerCase() && a.category !== 2
-      );
       const deviceInfo = await getDeviceInfo(transport);
+      console.log(deviceInfo);
       // const version = deviceInfo.version;
       const appByDevice = await getAppsListByDevice(deviceInfo, false, 1);
 
       const myApp = appByDevice.filter( app => app.name == appName);
       console.log(myApp);
 
-      // TODO get device version
-      const app = family.application_versions.find(
-        (a) => a.firmware === myApp[0].firmware
-      );
-
-      // const targetId = await getTargetId(transport);
-
-      await installApp(app, transport, isDelete);
+      await installApp(myApp[0], transport, isDelete);
+    } catch (e) {
+      setError(String(e));
+    }
+  }; 
+  
+  const onClickOpen = async (appName) => {
+    try {
+      transport = await TransportWebUSB.create();
+      await openApp(transport, appName);
+    } catch (e) {
+      setError(String(e));
+    }
+  }; 
+  const onClickQuit = async () => {
+    try {
+      transport = await TransportWebUSB.create();
+      await quitCurrentApp(transport);
+    } catch (e) {
+      setError(String(e));
+    }
+  }; 
+  const onClickGetCurrentAppAndVersion = async () => {
+    try {
+      transport = await TransportWebUSB.create();
+      const info = await getCurrentAppAndVersion(transport);
+      console.log(info);
     } catch (e) {
       setError(String(e));
     }
@@ -37,6 +50,9 @@ function App() {
   return (
     <div className="App">
       <div className="App-header">
+        <button onClick={() => onClickOpen("Cosmos")}>Open app</button>
+        <button onClick={() => onClickQuit()}>Quit app</button>
+        <button onClick={() => onClickGetCurrentAppAndVersion()}>Get info app</button>
         <button onClick={() => onClickInstall("Cosmos")}>Install app</button>
         <button onClick={() => onClickInstall("Cosmos", true)}>
           Remove app
