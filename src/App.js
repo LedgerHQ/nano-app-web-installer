@@ -1,7 +1,7 @@
 import "./App.css";
 import TransportWebUSB from "@ledgerhq/hw-transport-webusb";
 import { useState } from "react";
-import { getDeviceInfo, installApp, getAppsListByDevice, openApp, quitCurrentApp, getCurrentAppAndVersion } from 'nano-app-web-installer-lib-test';
+import { getDeviceInfo, installApp, getAppsListByDevice, getCurrentAppAndVersion } from 'nano-app-web-installer-lib-test';
 function App() {
   let transport;
   const [error, setError] = useState("");
@@ -26,21 +26,6 @@ function App() {
       setError(String(e));
     }
   }; 
-  
-  const onClickOpen = async (appName) => {
-    try {
-      await openApp(transport, appName);
-    } catch (e) {
-      setError(String(e));
-    }
-  }; 
-  const onClickQuit = async () => {
-    try {
-      await quitCurrentApp(transport);
-    } catch (e) {
-      setError(String(e));
-    }
-  }; 
   const onClickGetAllAppInstalledOnDevice = async () => {
     try {
       const info = await getCurrentAppAndVersion(transport);
@@ -53,8 +38,6 @@ function App() {
     <div className="App">
       <div className="App-header">
         <button onClick={() => onClickConnect()}>Connect nano device</button>
-        <button onClick={() => onClickOpen("Cosmos")}>Open app</button>
-        <button onClick={() => onClickQuit()}>Quit app</button>
         <button onClick={() => onClickGetAllAppInstalledOnDevice()}>Get info app</button>
         <button onClick={() => onClickInstall("Cosmos")}>Install app</button>
         <button onClick={() => onClickInstall("Cosmos", true)}>
